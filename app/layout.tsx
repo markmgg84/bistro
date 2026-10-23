@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./modern-business.css";
 import Pwa from "./pwa";
 export const metadata: Metadata = {
   title: "Bistrò Control",

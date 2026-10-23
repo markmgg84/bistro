@@ -223,13 +223,13 @@ export default function Workspace({
     ? (((data?.summary.revenue ?? 0) - previous) / previous) * 100
     : null;
   return (
-    <div className="shell">
+    <div className="shell" data-venue={venueId}>
       <aside>
         <a className="brand" href="/">
           bistrò<span>CONTROL / 1.0</span>
         </a>
         <div className="workspace">SPAZIO DI LAVORO</div>
-        <nav>
+        <nav aria-label="Navigazione principale">
           {sections.map((s, i) => {
             if (!finance && i !== 1) return null;
             const Icon = icons[i];
@@ -237,9 +237,10 @@ export default function Workspace({
               <button
                 key={s}
                 className={tab === i ? "active" : ""}
+                aria-current={tab === i ? "page" : undefined}
                 onClick={() => setTab(i)}
               >
-                <Icon size={20} />
+                <Icon size={20} aria-hidden="true" />
                 <span>{s}</span>
                 {tab === i && <ChevronRight size={16} />}
               </button>
@@ -352,7 +353,11 @@ export default function Workspace({
           </div>
         )}
         {!data ? (
-          <section className="card">
+          <section
+            className="card loading-card"
+            aria-live="polite"
+            aria-busy={!error}
+          >
             <p>
               {error ? "Impossibile caricare i dati." : "Caricamento dei dati…"}
             </p>
@@ -403,11 +408,19 @@ export default function Workspace({
                       {data.range.start} — {data.range.end} · {venue?.name}
                     </p>
                     {data.trend.length ? (
-                      <div className="actual-chart">
+                      <div
+                        className="actual-chart"
+                        role="group"
+                        aria-label="Andamento degli incassi"
+                        tabIndex={0}
+                      >
                         {data.trend.map((t) => (
                           <div
                             key={t.date}
                             title={`${t.date}: ${euro(t.revenue)}`}
+                            role="img"
+                            aria-label={`${t.date}: ${euro(t.revenue)}`}
+                            tabIndex={0}
                           >
                             <div
                               style={{
