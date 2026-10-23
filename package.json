@@ -1,0 +1,54 @@
+{
+  "name": "bistro-control",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/prisma-owner.ts migrate dev",
+    "test:e2e": "playwright test",
+    "setup:local": "tsx scripts/setup-local.ts",
+    "db:start": "tsx scripts/start-db.ts",
+    "db:deploy": "node --env-file-if-exists=.env --import tsx scripts/prisma-owner.ts migrate deploy",
+    "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
+    "dev:iphone": "tsx scripts/iphone.ts",
+    "test:integration": "node --env-file-if-exists=.env --import tsx --test tests/integration/*.test.ts",
+    "start:test": "next start --hostname 127.0.0.1 --port 3100",
+    "backup:verify": "node --env-file-if-exists=.env --import tsx scripts/backup-verify.ts",
+    "db:verify-restart": "node --env-file-if-exists=.env --import tsx scripts/verify-restart.ts",
+    "db:status": "node --env-file-if-exists=.env --import tsx scripts/prisma-owner.ts migrate status"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "date-fns": "^4.4.0",
+    "date-fns-tz": "^3.2.0",
+    "lucide-react": "^0.468.0",
+    "next": "^15.5.0",
+    "papaparse": "^5.7.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "read-excel-file": "^9.3.12",
+    "server-only": "^0.0.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.0.0",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prisma": "^6.19.0",
+    "tailwindcss": "^4.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  },
+  "overrides": {
+    "postcss": "8.5.31",
+    "deepmerge-ts": "8.0.2"
+  }
+}

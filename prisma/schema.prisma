@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String
+  passwordHash String
+  role         Role         @default(EMPLOYEE)
+  active       Boolean      @default(true)
+  memberships  Membership[]
+  employee     Employee?
+  sessions     Session[]
+  audit        AuditLog[]
+  imports      ImportRun[]
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model LoginThrottle {
+  key         String   @id
+  failures    Int      @default(0)
+  windowStart DateTime @default(now()) @db.Timestamptz
+}
+
+model Venue {
+  id          String          @id
+  name        String          @unique
+  memberships Membership[]
+  employees   EmployeeVenue[]
+  sales       Sale[]
+  goals       Goal[]
+  audit       AuditLog[]
+  imports     ImportRun[]
+}
+
+model Membership {
+  userId  String
+  venueId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue   Venue  @relation(fields: [venueId], references: [id])
+
+  @@id([userId, venueId])
+}
+
+model Employee {
+  id          String          @id @default(cuid())
+  userId      String?         @unique
+  displayName String
+  user        User?           @relation(fields: [userId], references: [id])
+  venues      EmployeeVenue[]
+}
+
+model EmployeeVenue {
+  employeeId  String
+  venueId     String
+  jobTitle    String
+  hourlyCost  Decimal      @db.Decimal(10, 2)
+  employee    Employee     @relation(fields: [employeeId], references: [id])
+  venue       Venue        @relation(fields: [venueId], references: [id])
+  shifts      Shift[]
+  attendances Attendance[]
+  absences    Absence[]
+
+  @@id([employeeId, venueId])
+}
+
+model Shift {
+  id         String        @id @default(cuid())
+  employeeId String
+  venueId    String
+  startsAt   DateTime      @db.Timestamptz
+  endsAt     DateTime      @db.Timestamptz
+  assignment EmployeeVenue @relation(fields: [employeeId, venueId], references: [employeeId, venueId])
+
+  @@index([venueId, startsAt])
+}
+
+model Attendance {
+  id           String        @id @default(cuid())
+  employeeId   String
+  venueId      String
+  startsAt     DateTime      @db.Timestamptz
+  endsAt       DateTime?     @db.Timestamptz
+  pauseMinutes Int           @default(0)
+  hourlyCost   Decimal       @db.Decimal(10, 2)
+  version      Int           @default(0)
+  assignment   EmployeeVenue @relation(fields: [employeeId, venueId], references: [employeeId, venueId])
+  pauses       Pause[]
+
+  @@index([venueId, startsAt])
+}
+
+model Pause {
+  id           String     @id @default(cuid())
+  attendanceId String
+  startsAt     DateTime   @db.Timestamptz
+  endsAt       DateTime?  @db.Timestamptz
+  attendance   Attendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+}
+
+model Absence {
+  id         String        @id @default(cuid())
+  employeeId String
+  venueId    String
+  startsAt   DateTime      @db.Timestamptz
+  endsAt     DateTime      @db.Timestamptz
+  kind       String
+  status     String        @default("PENDING")
+  assignment EmployeeVenue @relation(fields: [employeeId, venueId], references: [employeeId, venueId])
+
+  @@index([venueId, startsAt])
+}
+
+model Sale {
+  id           String     @id @default(cuid())
+  venueId      String
+  businessDate DateTime   @db.Date
+  receipt      String
+  revenue      Decimal    @db.Decimal(12, 2)
+  covers       Int
+  desserts     Int
+  importId     String?
+  venue        Venue      @relation(fields: [venueId], references: [id])
+  importRun    ImportRun? @relation(fields: [importId], references: [id])
+  items        SaleItem[]
+
+  @@unique([venueId, businessDate, receipt])
+  @@index([venueId, businessDate])
+}
+
+model SaleItem {
+  id       String  @id @default(cuid())
+  saleId   String
+  product  String
+  category String
+  quantity Int
+  revenue  Decimal @db.Decimal(12, 2)
+  sale     Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+}
+
+model Goal {
+  id                 String   @id @default(cuid())
+  venueId            String
+  month              DateTime @db.Date
+  dessertPercent     Decimal  @default(15) @db.Decimal(5, 2)
+  revenueTarget      Decimal  @default(120000) @db.Decimal(12, 2)
+  dailyRevenueTarget Decimal  @default(5000) @db.Decimal(12, 2)
+  venue              Venue    @relation(fields: [venueId], references: [id])
+
+  @@unique([venueId, month])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  venueId   String
+  action    String
+  entityId  String
+  before    Json?
+  after     Json?
+  reason    String
+  createdAt DateTime @default(now()) @db.Timestamptz
+  actor     User     @relation(fields: [actorId], references: [id])
+  venue     Venue    @relation(fields: [venueId], references: [id])
+
+  @@index([venueId, createdAt])
+}
+
+model ImportRun {
+  id        String   @id @default(cuid())
+  venueId   String
+  actorId   String
+  filename  String
+  status    String
+  accepted  Int
+  rejected  Int
+  createdAt DateTime @default(now()) @db.Timestamptz
+  venue     Venue    @relation(fields: [venueId], references: [id])
+  actor     User     @relation(fields: [actorId], references: [id])
+  sales     Sale[]
+
+  @@index([venueId, createdAt])
+}
