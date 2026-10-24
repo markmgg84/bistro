@@ -17,6 +17,7 @@ import {
 } from "./auth";
 import { hashPassword, verifyPassword } from "../password";
 import { saleSchema } from "../domain";
+import { categoryReportSchema, categoryTotals } from "../wycash";
 import { attendanceHours, periodRange, today } from "../time";
 const id = z.string().min(1).max(100);
 const date = saleSchema.shape.date;
@@ -85,6 +86,27 @@ export async function get(request: Request, path: string[]) {
       user: userView(u),
       venues: u.memberships.map((m) => m.venue),
     });
+  }
+  if (path.join("/") === "category-reports") {
+    const query = z.object({ venueId: id, reportId: id.optional() }).parse(Object.fromEntries(new URL(request.url).searchParams));
+    const user = await requireVenue(query.venueId);
+    requireManager(user);
+    try {
+      if (query.reportId) {
+        const report = await db.categoryReport.findFirst({ where: { id: query.reportId, venueId: query.venueId } });
+        if (!report) throw new ApiError(404, "Riepilogo non trovato nel locale");
+        return json({ ...report, quantity: Number(report.quantity), revenue: Number(report.revenue) });
+      }
+      const reports = await db.categoryReport.findMany({
+        where: { venueId: query.venueId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 50,
+        select: { id: true, filename: true, startsOn: true, endsOn: true, quantity: true, revenue: true, createdAt: true },
+      });
+      return json({ reports: reports.map((r) => ({ ...r, quantity: Number(r.quantity), revenue: Number(r.revenue) })) });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2021")
+        throw new ApiError(503, "Aggiorna il database con la migrazione per i riepiloghi Wycash.");
+      throw e;
+    }
   }
   if (path.join("/") !== "data") throw new ApiError(404, "Risorsa non trovata");
   const query = z
@@ -674,6 +696,31 @@ export async function post(request: Request, path: string[]) {
     });
     return json({ ok: true });
   }
+  if (route === "category-reports") {
+    requireManager(user);
+    const input = categoryReportSchema.parse(raw);
+    const totals = categoryTotals(input.rows);
+    try {
+      const report = await db.$transaction(async (tx) => {
+        const report = await tx.categoryReport.create({ data: {
+          venueId, actorId: user.id, filename: input.filename,
+          startsOn: new Date(input.startsOn), endsOn: new Date(input.endsOn),
+          rows: input.rows, quantity: BigInt(totals.quantity),
+          revenue: new Prisma.Decimal(totals.revenueCents).div(100),
+        } });
+        await tx.auditLog.create({ data: audit("CATEGORY_REPORT_IMPORTED", report.id, "Importazione riepilogo Wycash per categoria", {
+          startsOn: input.startsOn, endsOn: input.endsOn, rows: input.rows.length,
+          quantity: totals.quantity, revenueCents: totals.revenueCents,
+        }) });
+        return report;
+      });
+      return json({ ok: true, id: report.id });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")
+        throw new ApiError(409, "Esiste già un riepilogo per questo locale e questo periodo. Nessuna riga importata.");
+      throw e;
+    }
+  }
   if (route === "imports") {
     requireManager(user);
     const input = z
@@ -749,3 +796,4 @@ function jsonError(status: number, error: string) {
     { status, headers: { "Cache-Control": "no-store" } },
   );
 }
+
