@@ -1,13 +1,20 @@
 "use client";
 import { useState } from "react";
+import Brand from "../brand";
 export default function LoginForm() {
   const [error, setError] = useState(""),
     [pending, setPending] = useState(false);
   return (
     <main className="login-page">
-      <a className="brand" href="/">
-        bistrò<span>CONTROL / 1.0</span>
-      </a>
+      <div className="login-identity">
+        <Brand />
+        <h2>Due locali.<br />Un unico spazio di lavoro.</h2>
+        <p>Persone, incassi e obiettivi.<br />Tutto a colpo d’occhio.</p>
+        <div className="venue-logos" aria-label="I nostri locali">
+          <img src="/brand/bistro.png" alt="Bistrò Sestri Levante" width={100} height={100} />
+          <img src="/brand/marina.png" alt="Marina di Levante" width={100} height={100} />
+        </div>
+      </div>
       <section className="card login-card">
         <span className="demo">Ambiente privato · solo dati fittizi</span>
         <h1>Bentornato.</h1>
@@ -72,3 +79,4 @@ export default function LoginForm() {
     </main>
   );
 }
+

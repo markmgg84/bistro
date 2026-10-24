@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
+import Brand from "./brand";
 import {
   LayoutDashboard,
   Users,
@@ -223,13 +224,11 @@ export default function Workspace({
     ? (((data?.summary.revenue ?? 0) - previous) / previous) * 100
     : null;
   return (
-    <div className="shell">
+    <div className="shell" data-venue={venueId}>
       <aside>
-        <a className="brand" href="/">
-          bistrò<span>CONTROL / 1.0</span>
-        </a>
+        <Brand />
         <div className="workspace">SPAZIO DI LAVORO</div>
-        <nav>
+        <nav aria-label="Navigazione principale">
           {sections.map((s, i) => {
             if (!finance && i !== 1) return null;
             const Icon = icons[i];
@@ -237,9 +236,10 @@ export default function Workspace({
               <button
                 key={s}
                 className={tab === i ? "active" : ""}
+                aria-current={tab === i ? "page" : undefined}
                 onClick={() => setTab(i)}
               >
-                <Icon size={20} />
+                <Icon size={20} aria-hidden="true" />
                 <span>{s}</span>
                 {tab === i && <ChevronRight size={16} />}
               </button>
@@ -247,7 +247,7 @@ export default function Workspace({
           })}
         </nav>
         <div className="aside-bottom">
-          <span className="avatar">BC</span>
+          <span className="avatar">PM</span>
           <div>
             {user.name}
             <small>
@@ -263,7 +263,7 @@ export default function Workspace({
       <main>
         <header>
           <div className="breadcrumb">
-            Bistrò Control <ChevronRight size={13} />
+            Il pub della Maina <ChevronRight size={13} />
             {sections[tab]}
           </div>
           <div className="header-actions">
@@ -284,13 +284,16 @@ export default function Workspace({
               {tab === 0 ? "Ogni numero, una prospettiva." : sections[tab]}
             </h1>
             <p>
-              {venue?.name} · dati salvati in PostgreSQL · orari Europe/Rome
+              {venue?.name} · Il tuo locale, sotto controllo
             </p>
           </div>
-          <div
-            className={"venue-pill " + (venueId === "marina" ? "marina" : "")}
-          >
-            {venue?.name}
+          <div className="venue-identity">
+            {(venueId === "bistro" || venueId === "marina") && (
+              <img src={`/brand/${venueId}.png`} alt={venue?.name ?? "Locale"} width={96} height={96} />
+            )}
+            <div className={"venue-pill " + (venueId === "marina" ? "marina" : "")}>
+              {venue?.name}
+            </div>
           </div>
         </div>
         <div className="filters">
@@ -352,7 +355,11 @@ export default function Workspace({
           </div>
         )}
         {!data ? (
-          <section className="card">
+          <section
+            className="card loading-card"
+            aria-live="polite"
+            aria-busy={!error}
+          >
             <p>
               {error ? "Impossibile caricare i dati." : "Caricamento dei dati…"}
             </p>
@@ -403,11 +410,19 @@ export default function Workspace({
                       {data.range.start} — {data.range.end} · {venue?.name}
                     </p>
                     {data.trend.length ? (
-                      <div className="actual-chart">
+                      <div
+                        className="actual-chart"
+                        role="group"
+                        aria-label="Andamento degli incassi"
+                        tabIndex={0}
+                      >
                         {data.trend.map((t) => (
                           <div
                             key={t.date}
                             title={`${t.date}: ${euro(t.revenue)}`}
+                            role="img"
+                            aria-label={`${t.date}: ${euro(t.revenue)}`}
+                            tabIndex={0}
                           >
                             <div
                               style={{
@@ -1142,3 +1157,4 @@ function EmployeeSelect({ data }: { data: WorkspaceData }) {
     </label>
   );
 }
+

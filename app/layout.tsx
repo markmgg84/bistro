@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./modern-business.css";
+import "./branding.css";
 import Pwa from "./pwa";
 export const metadata: Metadata = {
-  title: "Bistrò Control",
+  title: "Il pub della Maina",
   description: "Gestione Bistrò e Marina di Levante — dimostrazione",
   manifest: "/manifest.webmanifest",
-  icons: { apple: "/icon-192.png" },
-  appleWebApp: { capable: true, title: "Bistrò Control" },
+  icons: { icon: "/icon.svg", apple: "/icon-192.png" },
+  appleWebApp: { capable: true, title: "Il pub della Maina" },
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,3 +20,4 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </html>
   );
 }
+
