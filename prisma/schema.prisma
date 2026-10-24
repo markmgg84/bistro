@@ -25,6 +25,7 @@ model User {
   sessions     Session[]
   audit        AuditLog[]
   imports      ImportRun[]
+  categoryReports CategoryReport[]
 }
 
 model Session {
@@ -52,6 +53,7 @@ model Venue {
   goals       Goal[]
   audit       AuditLog[]
   imports     ImportRun[]
+  categoryReports CategoryReport[]
 }
 
 model Membership {
@@ -200,5 +202,24 @@ model ImportRun {
   actor     User     @relation(fields: [actorId], references: [id])
   sales     Sale[]
 
+  @@index([venueId, createdAt])
+}
+
+
+model CategoryReport {
+  id           String   @id @default(cuid())
+  venueId      String
+  actorId      String
+  filename     String
+  startsOn     DateTime @db.Date
+  endsOn       DateTime @db.Date
+  rows         Json
+  quantity     BigInt
+  revenue      Decimal  @db.Decimal(16, 2)
+  createdAt    DateTime @default(now()) @db.Timestamptz
+  venue        Venue    @relation(fields: [venueId], references: [id])
+  actor        User     @relation(fields: [actorId], references: [id])
+
+  @@unique([venueId, startsOn, endsOn])
   @@index([venueId, createdAt])
 }

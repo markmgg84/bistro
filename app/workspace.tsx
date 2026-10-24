@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import Brand from "./brand";
+import WycashCategories from "./wycash-categories";
+import { isWycashCategories } from "../lib/wycash";
 import {
   LayoutDashboard,
   Users,
@@ -195,6 +197,8 @@ export default function Workspace({
       }
       if (!rows.length || rows.length > 5000)
         throw Error("Il file deve contenere da 1 a 5.000 righe");
+      if (isWycashCategories(Object.keys(rows[0])))
+        throw Error("Questo è un riepilogo Wycash per categoria. Usa il riquadro Wycash · vendite per categoria sopra questo modulo.");
       setFilename(file.name);
       setPreview(rows);
       const keys = Object.keys(rows[0]);
@@ -882,9 +886,12 @@ export default function Workspace({
                 )}
               </>
             )}
+            {(tab === 2 || tab === 3) && finance && (
+              <WycashCategories key={venueId} venueId={venueId} venueName={venue?.name ?? ""} canImport={tab === 2} />
+            )}
             {tab === 2 && finance && (
               <section className="card">
-                <h2>Importa gli incassi · {venue?.name}</h2>
+                <h2>Importa gli incassi per scontrino · {venue?.name}</h2>
                 <p>
                   CSV / XLSX · 2 MB · 5.000 righe · date YYYY-MM-DD e importi
                   con punto decimale
@@ -892,7 +899,7 @@ export default function Workspace({
                 <div className="notice">
                   I dati validati verranno salvati esclusivamente in{" "}
                   {venue?.name}. Un duplicato annulla l’intero import. Wycash
-                  non è ancora collegato.
+                  non è collegato automaticamente: per le categorie usa il riquadro dedicato.
                 </div>
                 <label className="upload">
                   Seleziona il file
