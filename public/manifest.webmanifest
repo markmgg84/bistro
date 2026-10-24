@@ -1,11 +1,11 @@
 {
-  "name": "Bistr\u00f2 Control",
-  "short_name": "Bistr\u00f2",
+  "name": "Il pub della Maina",
+  "short_name": "Pub della Maina",
   "lang": "it",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f7fb",
-  "theme_color": "#163f78",
+  "background_color": "#f4f8f8",
+  "theme_color": "#205d73",
   "icons": [
     {
       "src": "/icon-192.png",

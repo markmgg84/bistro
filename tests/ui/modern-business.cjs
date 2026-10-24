@@ -227,6 +227,15 @@ async function setup() {
         res.end(css);
         return;
       }
+      if (req.url.startsWith("/brand/")) {
+        const asset = path.resolve(root, "public", "." + req.url);
+        if (!asset.startsWith(path.join(root, "public", "brand") + path.sep) || !fs.existsSync(asset)) {
+          res.writeHead(404); res.end(); return;
+        }
+        res.setHeader("Content-Type", "image/png");
+        res.end(fs.readFileSync(asset));
+        return;
+      }
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.end(
         `<html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/ui.css"><div id="root"></div><script>window.props=${JSON.stringify(props).replaceAll("<", "\\u003c")}</script><script src="/ui.js"></script></html>`,
@@ -253,6 +262,9 @@ test("UI desktop: sezioni, dati letti soltanto, filtri e colore Marina", async (
   await p.goto(origin);
   await loaded(p);
   assert.equal(await p.locator("nav button").count(), 5);
+  assert.equal(await p.getByAltText("Il pub della Maina", { exact: true }).count(), 1);
+  await p.locator(".app-brand img").evaluate(async (img) => { await img.decode(); });
+  assert.ok(await p.locator(".app-brand img").evaluate((img) => img.naturalWidth > 0));
   assert.equal(
     await p.locator(".venue-pill").innerText(),
     props.venues[0].name,
@@ -261,13 +273,13 @@ test("UI desktop: sezioni, dati letti soltanto, filtri e colore Marina", async (
     await p
       .locator("body")
       .evaluate((e) => getComputedStyle(e).backgroundColor),
-    "rgb(245, 247, 251)",
+    "rgb(244, 248, 248)",
   );
   assert.equal(
     await p
       .locator(".kpi-0")
       .evaluate((e) => getComputedStyle(e).backgroundColor),
-    "rgb(23, 61, 122)",
+    "rgb(16, 91, 108)",
   );
   const labels = ["Dashboard", "Personale", "Incassi", "Vendite", "Obiettivi"];
   for (const name of labels) {
@@ -284,7 +296,7 @@ test("UI desktop: sezioni, dati letti soltanto, filtri e colore Marina", async (
     await p
       .locator(".venue-pill")
       .evaluate((e) => getComputedStyle(e).backgroundColor),
-    "rgb(242, 140, 40)",
+    "rgb(255, 160, 0)",
   );
   await p.getByLabel("Locale", { exact: true }).selectOption("bistro");
   await p.getByLabel("Periodo", { exact: true }).selectOption("week");
@@ -453,3 +465,4 @@ test("UI contrasto del testo almeno 4.5:1 e indicatore Marina", async () => {
     assert.ok(ratio >= 4.5);
   await p.close();
 });
+

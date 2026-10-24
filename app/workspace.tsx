@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
+import Brand from "./brand";
 import {
   LayoutDashboard,
   Users,
@@ -225,9 +226,7 @@ export default function Workspace({
   return (
     <div className="shell" data-venue={venueId}>
       <aside>
-        <a className="brand" href="/">
-          bistrò<span>CONTROL / 1.0</span>
-        </a>
+        <Brand />
         <div className="workspace">SPAZIO DI LAVORO</div>
         <nav aria-label="Navigazione principale">
           {sections.map((s, i) => {
@@ -248,7 +247,7 @@ export default function Workspace({
           })}
         </nav>
         <div className="aside-bottom">
-          <span className="avatar">BC</span>
+          <span className="avatar">PM</span>
           <div>
             {user.name}
             <small>
@@ -264,7 +263,7 @@ export default function Workspace({
       <main>
         <header>
           <div className="breadcrumb">
-            Bistrò Control <ChevronRight size={13} />
+            Il pub della Maina <ChevronRight size={13} />
             {sections[tab]}
           </div>
           <div className="header-actions">
@@ -285,13 +284,16 @@ export default function Workspace({
               {tab === 0 ? "Ogni numero, una prospettiva." : sections[tab]}
             </h1>
             <p>
-              {venue?.name} · dati salvati in PostgreSQL · orari Europe/Rome
+              {venue?.name} · Il tuo locale, sotto controllo
             </p>
           </div>
-          <div
-            className={"venue-pill " + (venueId === "marina" ? "marina" : "")}
-          >
-            {venue?.name}
+          <div className="venue-identity">
+            {(venueId === "bistro" || venueId === "marina") && (
+              <img src={`/brand/${venueId}.png`} alt={venue?.name ?? "Locale"} width={96} height={96} />
+            )}
+            <div className={"venue-pill " + (venueId === "marina" ? "marina" : "")}>
+              {venue?.name}
+            </div>
           </div>
         </div>
         <div className="filters">
@@ -1155,3 +1157,4 @@ function EmployeeSelect({ data }: { data: WorkspaceData }) {
     </label>
   );
 }
+
